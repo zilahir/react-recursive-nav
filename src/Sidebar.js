@@ -4,15 +4,15 @@ import styled from 'styled-components';
 const Sidebar = (props) => {
   const { links } = props;
   const [selectedMenus, setSelectedMenus] = useState([]);
-  const [depth, setDepth] = useState(0)
-  const handleMenuSelection = (label, depth) => {
-    setDepth(depth)
+  const handleMenuSelection = (tag, depth) => {
+    console.debug('clickedTag', tag)
     setSelectedMenus((selectedMenus) => {
       const newSelectedMenus = [...selectedMenus];
       // trim any menus after the depth
+      console.debug(newSelectedMenus)
       newSelectedMenus.length = depth;
-      if (label !== '') {
-        newSelectedMenus[depth] = label;
+      if (tag) {
+        newSelectedMenus[depth] = tag
       }
       return newSelectedMenus;
     });
@@ -21,54 +21,54 @@ const Sidebar = (props) => {
   return (
     <Sidebar.Wrapper>
       <Sidebar.List>
-        {links.map((link) => {
+        {links.map((tag) => {
           return (
             <SidebarItem
-              link={link}
+              tag={tag}
               handleMenuSelection={handleMenuSelection}
-              key={link.name}
+              key={tag.name}
               selectedMenus={selectedMenus}
             />
           );
         })}
       </Sidebar.List>
+      {
+        selectedMenus.map((level, index) => (
+          <SidebarItem.List depth={index + 1}>
+            {
+              level.children.map((tag, tagIndex) => (
+                <SidebarItem
+                  tag={tag}
+                  handleMenuSelection={handleMenuSelection}
+                  key={`child-${tag.name}-${tagIndex}`}
+                  depth={index + 1}
+                  selectedMenus={selectedMenus}
+                />
+              ))
+            }
+          </SidebarItem.List>
+        ))
+      }
     </Sidebar.Wrapper>
   );
 };
 
 const SidebarItem = ({
-  link,
+  tag,
   handleMenuSelection,
   selectedMenus,
   depth = 0,
 }) => {
-  const { name, path, children = [] } = link;
+  const { id, name, path, children = [] } = tag;
   return (
     <>
       {children.length > 0 ? (
         <SidebarItem.Item>
           <SidebarItem.Label
-            onClick={() => handleMenuSelection(name, depth)}
+            onClick={() => handleMenuSelection(tag, depth)}
           >
             {name}
           </SidebarItem.Label>
-          {selectedMenus[depth] === name && (
-            <SidebarItem.List depth={depth}>
-              {children.map((child, i) => {
-                const { name } = child;
-                const childDepth = depth + 1;
-                return (
-                  <SidebarItem
-                    link={child}
-                    handleMenuSelection={handleMenuSelection}
-                    key={`child-${name}-${i}`}
-                    depth={childDepth}
-                    selectedMenus={selectedMenus}
-                  />
-                );
-              })}
-            </SidebarItem.List>
-          )}
         </SidebarItem.Item>
       ) : (
         <SidebarItem.Item>
@@ -82,26 +82,20 @@ const SidebarItem = ({
 Sidebar.Wrapper = styled.nav`
   background: white;
   display: block;
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 375px;
   border-right: 1px solid lightgrey;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
 `;
-Sidebar.List = styled.ul``;
-SidebarItem.List = styled.ul`
-  width: 375px;
-  display: block;
-  position: absolute;
-  left: 375px;
-  top: -1px;
-  border: 1px solid lightgrey;
-  border-width: 1px 1px 0 0;
+
+Sidebar.List = styled.ul`
+  
 `;
+
+SidebarItem.List = styled.ul``;
+
 SidebarItem.Item = styled.li`
   position: relative;
-  border-bottom: 1px solid lightgrey;
 `;
 SidebarItem.Anchor = styled.span`
   display: block;
@@ -119,7 +113,7 @@ SidebarItem.Label = styled.span`
   &::after {
     position: absolute;
     content: '\\276F';
-    right: 20px;
+    right: 10px;
   }
 `;
 
